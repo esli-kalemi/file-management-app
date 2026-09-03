@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import "../styles/dashboard.css";
 import { folders, files } from "../data/mockData";
+import FileRow from "./FileRow";
+import FolderCard from "./FolderCard";
+import TrashView from "./TrashView";
+import MyFilesView from "./MyFilesView";
+import FavoritesView from "./FavoritesView";
 
 function Dashboard({ currentSection }) {
 
@@ -25,7 +30,12 @@ function Dashboard({ currentSection }) {
 
     const [uploadFolder, setUploadFolder] = useState(null);
     const [trashFiles, setTrashFiles] = useState([]);
-    
+    const [showPermanentDeleteModal, setShowPermanentDeleteModal] = useState(false);
+    const [fileToPermanentlyDelete, setFileToPermanentlyDelete] = useState(null);
+    const [showEmptyTrashModal, setShowEmptyTrashModal] = useState(false);
+    const [favoriteFiles, setFavoriteFiles] = useState([]);
+    const [favoriteFolders, setFavoriteFolders] = useState([]);
+
     useEffect(() => {
     function handleClickOutside() {
         setOpenMenu(null);
@@ -240,75 +250,95 @@ function Dashboard({ currentSection }) {
     file
   ]);
 }
+function handlePermanentDelete(file) {
+  setFileToPermanentlyDelete(file);
+  setShowPermanentDeleteModal(true);
+}
+function confirmPermanentDelete() {
+  if (!fileToPermanentlyDelete) {
+    return;
+  }
+
+  setTrashFiles((currentTrash) =>
+    currentTrash.filter(
+      (trashFile) =>
+        trashFile.id !== fileToPermanentlyDelete.id
+    )
+  );
+
+  setFileToPermanentlyDelete(null);
+  setShowPermanentDeleteModal(false);
+}
+function handleEmptyTrash() {
+  setShowEmptyTrashModal(true);
+}
+function confirmEmptyTrash() {
+  setTrashFiles([]);
+
+  setShowEmptyTrashModal(false);
+}
+function handleToggleFavorite(file) {
+  setFavoriteFiles((currentFavorites) => {
+    const alreadyFavorite = currentFavorites.some(
+      (favorite) => favorite.id === file.id
+    );
+
+    if (alreadyFavorite) {
+      return currentFavorites.filter(
+        (favorite) => favorite.id !== file.id
+      );
+    }
+
+    return [...currentFavorites, file];
+  });
+}
+function handleToggleFolderFavorite(folder) {
+  setFavoriteFolders((currentFavorites) => {
+    const alreadyFavorite = currentFavorites.some(
+      (favorite) => favorite.id === folder.id
+    );
+
+    if (alreadyFavorite) {
+      return currentFavorites.filter(
+        (favorite) => favorite.id !== folder.id
+      );
+    }
+
+    return [...currentFavorites, folder];
+  });
+}
 
   return (
     <section className="dashboard">
     {currentSection === "trash" ? (
-        <div className="trash-view">
-
-            <div className="trash-view-header">
-            <div>
-                <h1>Trash</h1>
-                <p>Files you have deleted are stored here.</p>
-            </div>
-            </div>
-
-            {trashFiles.length === 0 ? (
-            <div className="folder-empty-state">
-                <div className="folder-empty-icon">🗑️</div>
-
-                <h2>Trash is empty</h2>
-
-                <p>
-                Deleted files will appear here.
-                </p>
-            </div>
-            ) : (
-            <div className="files-table">
-
-                <div className="file-row file-header">
-                <span>Name</span>
-                <span>Size</span>
-                <span>Original Folder</span>
-                <span>Deleted</span>
-                <span></span>
-                </div>
-
-                {trashFiles.map((file) => (
-                <div
-                    className="file-row"
-                    key={file.id}
-                >
-                    <div className="file-name">
-                    <span className="file-icon">📄</span>
-                    <span>{file.name}</span>
-                    </div>
-
-                    <span>{file.size}</span>
-
-                   <span>
-                        {folderList.find(
-                            (folder) => folder.id === file.folderId
-                        )?.name || "No folder"}
-                        </span>
-
-                    <span>{file.deletedAt}</span>
-                    <button
-                        className="trash-restore-btn"
-                        onClick={() => handleRestoreFile(file)}
-                        >
-                        Restore
-                    </button>
-                    <div></div>
-                </div>
-                ))}
-
-            </div>
-            )}
-
-        </div>
-
-        ) : selectedFolder ? (
+    <TrashView
+        trashFiles={trashFiles}
+        folderList={folderList}
+        handleRestoreFile={handleRestoreFile}
+        handlePermanentDelete={handlePermanentDelete}
+        handleEmptyTrash={handleEmptyTrash}
+    />
+    ) : currentSection === "my-files" ? (
+    <MyFilesView
+        fileList={fileList}
+        handleOpenFile={handleOpenFile}
+    />
+    ) : currentSection === "favorites" ? (
+    <FavoritesView
+    favoriteFolders={favoriteFolders}
+    favoriteFiles={favoriteFiles}
+    openMenu={openMenu}
+    menuDirection={menuDirection}
+    handleMenuClick={handleMenuClick}
+    handleOpenFile={handleOpenFile}
+    handleFileRenameClick={handleFileRenameClick}
+    handleFileDeleteClick={handleFileDeleteClick}
+    handleToggleFavorite={handleToggleFavorite}
+    handleOpenFolder={handleOpenFolder}
+    handleRenameClick={handleRenameClick}
+    handleDeleteClick={handleDeleteClick}
+    handleToggleFolderFavorite={handleToggleFolderFavorite}
+    />    ) : selectedFolder ? (
         <div className="folder-view">
 
         <div className="folder-view-header">
@@ -352,61 +382,20 @@ function Dashboard({ currentSection }) {
       <span></span>
     </div>
 
-        {folderFiles.map((file) => (
-        <div
-            className="file-row"
+       {folderFiles.map((file) => (
+        <FileRow
             key={file.id}
-            onClick={() => handleOpenFile(file)}
-        >
-
-            <div className="file-name">
-            <span className="file-icon">
-                📄
-            </span>
-
-            <span>{file.name}</span>
-            </div>
-
-            <span>{file.size}</span>
-
-            <span>{file.modified}</span>
-
-            <div className="card-menu-container">
-           <button
-                className="card-menu"
-                onClick={(event) => {
-                    event.stopPropagation();
-                    handleMenuClick(event, `folder-file-${file.id}`);
-                }}
-            >
-                ⋮
-            </button>
-            {openMenu === `folder-file-${file.id}` && (
-                <div
-                    className={`context-menu ${menuDirection}`}
-                    onClick={(event) => event.stopPropagation()}
-                >
-                    <button onClick={() => handleOpenFile(file)}>
-                    Open
-                    </button>
-
-                    <button>
-                    Download
-                    </button>
-
-                    <button onClick={() => handleFileRenameClick(file)}>
-                    Rename
-                    </button>
-
-                    <button onClick={() => handleFileDeleteClick(file)}>
-                    Delete
-                    </button>
-
-                </div>
-            )}
-            </div>
-
-        </div>
+            file={file}
+            menuId={`folder-file-${file.id}`}
+            openMenu={openMenu}
+            menuDirection={menuDirection}
+            handleMenuClick={handleMenuClick}
+            handleOpenFile={handleOpenFile}
+            handleFileRenameClick={handleFileRenameClick}
+            handleFileDeleteClick={handleFileDeleteClick}
+            favoriteFiles={favoriteFiles}
+            handleToggleFavorite={handleToggleFavorite}
+        />
         ))}
     </div>
     )}
@@ -449,57 +438,19 @@ function Dashboard({ currentSection }) {
 
         <div className="folders-grid">
             {folderList.map((folder) => (
-            <div
-            className="folder-card"
-            key={folder.id}
-            onClick={() => handleOpenFolder(folder)}
-            >
-                    <div className="folder-icon">
-                    📁
-                    </div>
-
-                    <div>
-                    <h3>{folder.name}</h3>
-                    <p>
-                        {files.filter((file) => file.folderId === folder.id).length} files
-                    </p>
-                    </div>
-
-                    <div className="card-menu-container">
-
-                    <button
-                        className="card-menu"
-                        onClick={(event) => {
-                            event.stopPropagation();
-                            handleMenuClick(event, `folder-${folder.id}`);
-                        }}
-                    >
-                        ⋮
-                    </button>
-
-                    {openMenu === `folder-${folder.id}` && (
-                        <div
-                            className={`context-menu ${menuDirection}`}
-                            onClick={(event) => event.stopPropagation()}
-                        >
-                            <button onClick={() => handleOpenFolder(folder)}>
-                                Open
-                            </button> 
-
-                            <button onClick={() => handleRenameClick(folder)}>
-                                Rename
-                            </button>
-
-                            <button onClick={() => handleDeleteClick(folder)}>
-                                Delete
-                            </button>
-                        </div>
-                    )}
-
-                    </div>
-
-                </div>
-                ))}
+            <FolderCard
+                key={folder.id}
+                folder={folder}
+                openMenu={openMenu}
+                menuDirection={menuDirection}
+                handleMenuClick={handleMenuClick}
+                handleOpenFolder={handleOpenFolder}
+                handleRenameClick={handleRenameClick}
+                handleDeleteClick={handleDeleteClick}
+                favoriteFolders={favoriteFolders}
+                handleToggleFolderFavorite={handleToggleFolderFavorite}
+            />
+            ))}
             </div>
       </div>
 
@@ -523,56 +474,20 @@ function Dashboard({ currentSection }) {
             <span></span>
         </div>
 
-        {fileList.map((file) => (
-                <div
-                    className="file-row"
+          {fileList.map((file) => (
+                <FileRow
                     key={file.id}
-                    onClick={() => handleOpenFile(file)}
-                >
-                <div className="file-name">
-                <span className="file-icon">
-                    📄
-                </span>
-
-                <span>{file.name}</span>
-                </div>
-
-                <span>{file.size}</span>
-
-                <span>{file.modified}</span>
-
-                <div className="card-menu-container">
-
-                <button
-                    className="card-menu"
-                    onClick={(event) => {
-                        event.stopPropagation();
-                        handleMenuClick(event, `file-${file.id}`);
-                    }}
-                >
-                ⋮
-                </button>
-
-               {openMenu === `file-${file.id}` && (
-                <div
-                    className={`context-menu ${menuDirection}`}
-                    onClick={(event) => event.stopPropagation()}
-                >
-                    <button>Open</button>
-                    <button>Download</button>
-
-                    <button onClick={() => handleFileRenameClick(file)}>
-                        Rename
-                    </button>
-                    <button onClick={() => handleFileDeleteClick(file)}>
-                        Delete
-                    </button>
-                </div>
-                )}
-
-                </div>
-
-            </div>
+                    file={file}
+                    menuId={`file-${file.id}`}
+                    openMenu={openMenu}
+                    menuDirection={menuDirection}
+                    handleMenuClick={handleMenuClick}
+                    handleOpenFile={handleOpenFile}
+                    handleFileRenameClick={handleFileRenameClick}
+                    handleFileDeleteClick={handleFileDeleteClick}
+                    favoriteFiles={favoriteFiles}
+                    handleToggleFavorite={handleToggleFavorite}
+                    />
             ))}
 
         </div>
@@ -761,6 +676,88 @@ function Dashboard({ currentSection }) {
             </div>
         </div>
         )}
+ {showPermanentDeleteModal && (
+  <div
+    className="modal-overlay"
+    onClick={() => {
+      setShowPermanentDeleteModal(false);
+      setFileToPermanentlyDelete(null);
+    }}
+  >
+    <div
+      className="folder-modal delete-modal"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <h2>Delete permanently?</h2>
+
+      <p>
+        Are you sure you want to permanently delete{" "}
+        <strong>
+          {fileToPermanentlyDelete?.name}
+        </strong>
+        ? This action cannot be undone.
+      </p>
+
+      <div className="modal-actions">
+
+        <button
+          className="btn btn-secondary"
+          onClick={() => {
+            setShowPermanentDeleteModal(false);
+            setFileToPermanentlyDelete(null);
+          }}
+        >
+          Cancel
+        </button>
+
+        <button
+          className="btn btn-danger"
+          onClick={confirmPermanentDelete}
+        >
+          Delete Permanently
+        </button>
+
+      </div>
+    </div>
+  </div>
+)}
+
+{showEmptyTrashModal && (
+  <div
+    className="modal-overlay"
+    onClick={() => setShowEmptyTrashModal(false)}
+  >
+    <div
+      className="folder-modal delete-modal"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <h2>Empty Trash?</h2>
+
+      <p>
+        Are you sure you want to permanently delete all
+        files in Trash? This action cannot be undone.
+      </p>
+
+      <div className="modal-actions">
+
+        <button
+          className="btn btn-secondary"
+          onClick={() => setShowEmptyTrashModal(false)}
+        >
+          Cancel
+        </button>
+
+        <button
+          className="btn btn-danger"
+          onClick={confirmEmptyTrash}
+        >
+          Empty Trash
+        </button>
+
+      </div>
+    </div>
+  </div>
+)}
     </section>
   );
 }

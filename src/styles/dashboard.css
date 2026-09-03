@@ -214,6 +214,14 @@
   border-bottom: 1px solid #f0f0f0;
 
   font-size: 13px;
+
+  cursor: pointer;
+
+  transition: background 0.2s ease;
+}
+
+.file-row:not(.file-header):hover {
+  background: #f9fafb;
 }
 
 .file-row:first-child {
@@ -467,6 +475,7 @@
 .trash-view-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 35px;
 }
 
@@ -493,4 +502,78 @@
 
 .trash-restore-btn:hover {
   color: #4338ca;
+}
+.trash-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.trash-actions button {
+  border: none;
+  background: #eef2ff;
+  color: #4f46e5;
+
+  padding: 7px 12px;
+  border-radius: 6px;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.trash-actions button:hover {
+  background: #e0e7ff;
+}
+
+.permanent-delete-btn {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+}
+
+.permanent-delete-btn:hover {
+  background: #fee2e2 !important;
+}
+
+.favorite-button {
+  margin-left: 8px;
+  border: none;
+  background: none;
+  color: #d1d5db;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px;
+  line-height: 1;
+  transition: 0.2s ease;
+}
+
+.favorite-button:hover {
+  color: #f59e0b;
+  transform: scale(1.1);
+}
+
+.favorite-button.favorite-active {
+  color: #f59e0b;
+}
+.folder-favorite-button {
+  margin-left: auto;
+  border: none;
+  background: none;
+  color: #d1d5db;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px;
+  line-height: 1;
+  transition: 0.2s ease;
+}
+
+.folder-favorite-button:hover {
+  color: #f59e0b;
+  transform: scale(1.1);
+}
+
+.folder-favorite-button.folder-favorite-active {
+  color: #f59e0b;
 }

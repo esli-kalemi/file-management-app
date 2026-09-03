@@ -1,0 +1,101 @@
+import "../styles/dashboard.css";
+
+function TrashView({
+  trashFiles,
+  folderList,
+  handleRestoreFile,
+  handlePermanentDelete,
+  handleEmptyTrash
+}) {
+      return (
+    <div className="trash-view">
+
+        <div className="trash-view-header">
+            <div>
+                <h1>Trash</h1>
+                <p>Files you have deleted are stored here.</p>
+            </div>
+
+            {trashFiles.length > 0 && (
+                <button
+                className="btn btn-danger"
+                onClick={handleEmptyTrash}
+                >
+                Empty Trash
+                </button>
+            )}
+         </div>
+      {trashFiles.length === 0 ? (
+        <div className="folder-empty-state">
+          <div className="folder-empty-icon">
+            🗑️
+          </div>
+
+          <h2>Trash is empty</h2>
+
+          <p>
+            Deleted files will appear here.
+          </p>
+        </div>
+      ) : (
+        <div className="files-table">
+
+          <div className="file-row file-header">
+            <span>Name</span>
+            <span>Size</span>
+            <span>Original Folder</span>
+            <span>Deleted</span>
+            <span></span>
+          </div>
+
+          {trashFiles.map((file) => (
+            <div
+              className="file-row"
+              key={file.id}
+            >
+              <div className="file-name">
+                <span className="file-icon">
+                  📄
+                </span>
+
+                <span>{file.name}</span>
+              </div>
+
+              <span>{file.size}</span>
+
+              <span>
+                {folderList.find(
+                  (folder) =>
+                    folder.id === file.folderId
+                )?.name || "No folder"}
+              </span>
+
+              <span>{file.deletedAt}</span>
+
+              <div className="trash-actions">
+
+                <button
+                    onClick={() => handleRestoreFile(file)}
+                >
+                    Restore
+                </button>
+
+                <button
+                    className="permanent-delete-btn"
+                    onClick={() => handlePermanentDelete(file)}
+                >
+                    Delete
+                </button>
+
+                </div>
+            </div>
+          ))}
+
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+export default TrashView;

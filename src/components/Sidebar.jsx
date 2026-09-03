@@ -15,16 +15,26 @@ function Sidebar({ currentSection, setCurrentSection }) {
           <span className="sidebar-icon">⌂</span>
           <span>Dashboard</span>
         </button>
-        
-        <a href="#" className="sidebar-item">
-          <span className="sidebar-icon">📁</span>
-          <span>My Files</span>
-        </a>
 
-        <a href="#" className="sidebar-item">
-          <span className="sidebar-icon">★</span>
-          <span>Favorites</span>
-        </a>
+       <button
+        className={`sidebar-item ${
+            currentSection === "my-files" ? "active" : ""
+        }`}
+        onClick={() => setCurrentSection("my-files")}
+        >
+        <span className="sidebar-icon">📁</span>
+        <span>My Files</span>
+        </button>
+
+        <button
+        className={`sidebar-item ${
+            currentSection === "favorites" ? "active" : ""
+        }`}
+        onClick={() => setCurrentSection("favorites")}
+        >
+        <span className="sidebar-icon">★</span>
+        <span>Favorites</span>
+        </button>
 
         <button
             className={`sidebar-item ${
