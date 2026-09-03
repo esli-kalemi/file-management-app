@@ -479,3 +479,18 @@
   color: #6b7280;
   font-size: 14px;
 }
+.trash-view .file-row {
+  grid-template-columns: 2fr 1fr 1fr 1fr 90px;
+}
+.trash-restore-btn {
+  border: none;
+  background: none;
+  color: #4f46e5;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.trash-restore-btn:hover {
+  color: #4338ca;
+}

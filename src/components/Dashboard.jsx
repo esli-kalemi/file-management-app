@@ -228,6 +228,18 @@ function Dashboard({ currentSection }) {
         setUploadFolder(null);
         event.target.value = "";
         }
+    function handleRestoreFile(file) {
+  setTrashFiles((currentTrash) =>
+    currentTrash.filter(
+      (trashFile) => trashFile.id !== file.id
+    )
+  );
+
+  setFileList((currentFiles) => [
+    ...currentFiles,
+    file
+  ]);
+}
 
   return (
     <section className="dashboard">
@@ -259,6 +271,7 @@ function Dashboard({ currentSection }) {
                 <span>Size</span>
                 <span>Original Folder</span>
                 <span>Deleted</span>
+                <span></span>
                 </div>
 
                 {trashFiles.map((file) => (
@@ -280,7 +293,12 @@ function Dashboard({ currentSection }) {
                         </span>
 
                     <span>{file.deletedAt}</span>
-
+                    <button
+                        className="trash-restore-btn"
+                        onClick={() => handleRestoreFile(file)}
+                        >
+                        Restore
+                    </button>
                     <div></div>
                 </div>
                 ))}
