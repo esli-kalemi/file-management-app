@@ -50,7 +50,7 @@ function FavoritesView({
         </div>
     </div>
     )}
-      {favoriteFiles.length === 0 ? (
+      {favoriteFiles.length === 0 && favoriteFolders.length === 0 ? (
         <div className="folder-empty-state">
           <div className="folder-empty-icon">
             ★

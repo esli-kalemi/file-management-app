@@ -1,6 +1,17 @@
+import FileRow from "./FileRow";
 import "../styles/dashboard.css";
 
-function MyFilesView({ fileList, handleOpenFile }) {
+function MyFilesView({
+  fileList,
+  openMenu,
+  menuDirection,
+  handleMenuClick,
+  handleOpenFile,
+  handleFileRenameClick,
+  handleFileDeleteClick,
+  favoriteFiles,
+  handleToggleFavorite
+}) {
   return (
     <div className="my-files-view">
 
@@ -34,25 +45,19 @@ function MyFilesView({ fileList, handleOpenFile }) {
           </div>
 
           {fileList.map((file) => (
-            <div
-              className="file-row"
+            <FileRow
               key={file.id}
-              onClick={() => handleOpenFile(file)}
-            >
-              <div className="file-name">
-                <span className="file-icon">
-                  📄
-                </span>
-
-                <span>{file.name}</span>
-              </div>
-
-              <span>{file.size}</span>
-
-              <span>{file.modified}</span>
-
-              <div></div>
-            </div>
+              file={file}
+              menuId={`my-files-${file.id}`}
+              openMenu={openMenu}
+              menuDirection={menuDirection}
+              handleMenuClick={handleMenuClick}
+              handleOpenFile={handleOpenFile}
+              handleFileRenameClick={handleFileRenameClick}
+              handleFileDeleteClick={handleFileDeleteClick}
+              favoriteFiles={favoriteFiles}
+              handleToggleFavorite={handleToggleFavorite}
+            />
           ))}
 
         </div>

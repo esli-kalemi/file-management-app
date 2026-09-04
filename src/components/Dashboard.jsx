@@ -321,7 +321,14 @@ function handleToggleFolderFavorite(folder) {
     ) : currentSection === "my-files" ? (
     <MyFilesView
         fileList={fileList}
+        openMenu={openMenu}
+        menuDirection={menuDirection}
+        handleMenuClick={handleMenuClick}
         handleOpenFile={handleOpenFile}
+        handleFileRenameClick={handleFileRenameClick}
+        handleFileDeleteClick={handleFileDeleteClick}
+        favoriteFiles={favoriteFiles}
+        handleToggleFavorite={handleToggleFavorite}
     />
     ) : currentSection === "favorites" ? (
     <FavoritesView

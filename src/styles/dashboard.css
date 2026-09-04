@@ -131,7 +131,9 @@
 
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
+.folder-card:has(.context-menu) {
+  z-index: 10;
+}
 .folder-card:hover {
   transform: translateY(-2px);
 
@@ -576,4 +578,57 @@
 
 .folder-favorite-button.folder-favorite-active {
   color: #f59e0b;
+}
+
+/* =========================
+   FAVORITES
+========================= */
+
+.favorites-view {
+  width: 100%;
+}
+
+.favorites-view-header {
+  margin-bottom: 35px;
+}
+
+.favorites-view-header h1 {
+  font-size: 28px;
+  margin-bottom: 6px;
+}
+
+.favorites-view-header p {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.favorites-view .section-header {
+  margin-bottom: 15px;
+}
+
+.favorites-view .section-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* =========================
+   MY FILES
+========================= */
+
+.my-files-view {
+  width: 100%;
+}
+
+.my-files-header {
+  margin-bottom: 35px;
+}
+
+.my-files-header h1 {
+  font-size: 28px;
+  margin-bottom: 6px;
+}
+
+.my-files-header p {
+  color: #6b7280;
+  font-size: 14px;
 }
