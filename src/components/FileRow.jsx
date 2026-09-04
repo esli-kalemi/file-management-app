@@ -1,3 +1,4 @@
+import "../styles/file-card.css";
 import "../styles/dashboard.css";
 
 function FileRow({

@@ -1,6 +1,6 @@
 import "../styles/navbar.css";
 
-function Navbar() {
+function Navbar({ searchTerm, setSearchTerm }) {
   return (
     <header className="navbar">
       <div className="navbar-logo">
@@ -9,8 +9,10 @@ function Navbar() {
 
       <div className="navbar-search">
         <input
-          type="text"
-          placeholder="Search files and folders..."
+            type="text"
+            placeholder="Search files and folders..."
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
         />
       </div>
 

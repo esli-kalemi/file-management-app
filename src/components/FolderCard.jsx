@@ -1,3 +1,4 @@
+import "../styles/folder-card.css";
 import "../styles/dashboard.css";
 
 function FolderCard({

@@ -7,7 +7,7 @@ import TrashView from "./TrashView";
 import MyFilesView from "./MyFilesView";
 import FavoritesView from "./FavoritesView";
 
-function Dashboard({ currentSection }) {
+function Dashboard({ currentSection, setCurrentSection, searchTerm }) {
 
     const [openMenu, setOpenMenu] = useState(null);
     const [menuDirection, setMenuDirection] = useState("down");
@@ -30,11 +30,28 @@ function Dashboard({ currentSection }) {
 
     const [uploadFolder, setUploadFolder] = useState(null);
     const [trashFiles, setTrashFiles] = useState([]);
+    const [trashFolders, setTrashFolders] = useState([]);
     const [showPermanentDeleteModal, setShowPermanentDeleteModal] = useState(false);
     const [fileToPermanentlyDelete, setFileToPermanentlyDelete] = useState(null);
     const [showEmptyTrashModal, setShowEmptyTrashModal] = useState(false);
     const [favoriteFiles, setFavoriteFiles] = useState([]);
     const [favoriteFolders, setFavoriteFolders] = useState([]);
+    const [showAllFolders, setShowAllFolders] = useState(false);
+    const filteredFiles = fileList.filter((file) =>
+    file.name.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
+const filteredFolders = folderList.filter((folder) =>
+    folder.name.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
+const filteredFavoriteFiles = favoriteFiles.filter((file) =>
+    file.name.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
+const filteredFavoriteFolders = favoriteFolders.filter((folder) =>
+    folder.name.toLowerCase().includes(searchTerm.toLowerCase())
+);
 
     useEffect(() => {
     function handleClickOutside() {
@@ -129,9 +146,21 @@ function Dashboard({ currentSection }) {
 
         setFolderList((currentFolders) =>
             currentFolders.filter(
-            (folder) => folder.id !== folderToDelete.id
+                (folder) => folder.id !== folderToDelete.id
             )
         );
+
+        setTrashFolders((currentTrash) => [
+            ...currentTrash,
+            {
+                ...folderToDelete,
+                deletedAt: new Date().toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric"
+                })
+            }
+        ]);
 
         setFolderToDelete(null);
         setShowDeleteModal(false);
@@ -250,6 +279,25 @@ function Dashboard({ currentSection }) {
     file
   ]);
 }
+function handleRestoreFolder(folder) {
+  setTrashFolders((currentTrash) =>
+    currentTrash.filter(
+      (trashFolder) => trashFolder.id !== folder.id
+    )
+  );
+
+  setFolderList((currentFolders) => [
+    ...currentFolders,
+    folder
+  ]);
+}
+function handlePermanentDeleteFolder(folder) {
+  setTrashFolders((currentTrash) =>
+    currentTrash.filter(
+      (trashFolder) => trashFolder.id !== folder.id
+    )
+  );
+}
 function handlePermanentDelete(file) {
   setFileToPermanentlyDelete(file);
   setShowPermanentDeleteModal(true);
@@ -274,7 +322,7 @@ function handleEmptyTrash() {
 }
 function confirmEmptyTrash() {
   setTrashFiles([]);
-
+  setTrashFolders([]);
   setShowEmptyTrashModal(false);
 }
 function handleToggleFavorite(file) {
@@ -311,16 +359,20 @@ function handleToggleFolderFavorite(folder) {
   return (
     <section className="dashboard">
     {currentSection === "trash" ? (
-    <TrashView
-        trashFiles={trashFiles}
-        folderList={folderList}
-        handleRestoreFile={handleRestoreFile}
-        handlePermanentDelete={handlePermanentDelete}
-        handleEmptyTrash={handleEmptyTrash}
+    <TrashView   
+    trashFiles={trashFiles}
+    trashFolders={trashFolders}
+    folderList={folderList}
+    handleRestoreFile={handleRestoreFile}
+    handleRestoreFolder={handleRestoreFolder}
+    handlePermanentDelete={handlePermanentDelete}
+    handlePermanentDeleteFolder={handlePermanentDeleteFolder}
+    handleEmptyTrash={handleEmptyTrash}
+
     />
     ) : currentSection === "my-files" ? (
     <MyFilesView
-        fileList={fileList}
+        fileList={filteredFiles}
         openMenu={openMenu}
         menuDirection={menuDirection}
         handleMenuClick={handleMenuClick}
@@ -332,8 +384,8 @@ function handleToggleFolderFavorite(folder) {
     />
     ) : currentSection === "favorites" ? (
     <FavoritesView
-    favoriteFolders={favoriteFolders}
-    favoriteFiles={favoriteFiles}
+    favoriteFolders={filteredFavoriteFolders}
+    favoriteFiles={filteredFavoriteFiles}
     openMenu={openMenu}
     menuDirection={menuDirection}
     handleMenuClick={handleMenuClick}
@@ -438,13 +490,19 @@ function handleToggleFolderFavorite(folder) {
     <div className="section">
         <div className="section-header">
           <h2>Folders</h2>
-          <button className="view-all-btn">
-            View all
-          </button>
+           <button
+            className="view-all-btn"
+            onClick={() => setShowAllFolders(!showAllFolders)}
+        >
+            {showAllFolders ? "Show less" : "View all"}
+        </button>
         </div>
 
         <div className="folders-grid">
-            {folderList.map((folder) => (
+        {(showAllFolders
+            ? filteredFolders
+            : filteredFolders.slice(0, 3)
+        ).map((folder) => (            
             <FolderCard
                 key={folder.id}
                 folder={folder}
@@ -467,9 +525,12 @@ function handleToggleFolderFavorite(folder) {
         <div className="section-header">
           <h2>Recent Files</h2>
 
-          <button className="view-all-btn">
-            View all
-          </button>
+            <button
+                className="view-all-btn"
+                onClick={() => setCurrentSection("my-files")}
+                >
+                View all
+            </button>
         </div>
 
         <div className="files-table">
@@ -481,8 +542,8 @@ function handleToggleFolderFavorite(folder) {
             <span></span>
         </div>
 
-          {fileList.map((file) => (
-                <FileRow
+                {filteredFiles.map((file) => (
+                    <FileRow
                     key={file.id}
                     file={file}
                     menuId={`file-${file.id}`}

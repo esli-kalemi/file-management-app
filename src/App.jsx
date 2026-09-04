@@ -5,10 +5,14 @@ import { useState } from "react";
 
 function App() {
   const [currentSection, setCurrentSection] = useState("dashboard");
+  const [searchTerm, setSearchTerm] = useState("");
 
   return (
     <>
-      <Navbar />
+      <Navbar
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+      />
 
       <div className="app-layout">
         <Sidebar
@@ -20,6 +24,7 @@ function App() {
           <Dashboard
             currentSection={currentSection}
             setCurrentSection={setCurrentSection}
+            searchTerm={searchTerm}
           />
         </main>
       </div>

@@ -2,9 +2,12 @@ import "../styles/dashboard.css";
 
 function TrashView({
   trashFiles,
+  trashFolders,
   folderList,
   handleRestoreFile,
+  handleRestoreFolder,
   handlePermanentDelete,
+  handlePermanentDeleteFolder,
   handleEmptyTrash
 }) {
       return (
@@ -13,10 +16,9 @@ function TrashView({
         <div className="trash-view-header">
             <div>
                 <h1>Trash</h1>
-                <p>Files you have deleted are stored here.</p>
-            </div>
+                <p>Files and folders you have deleted are stored here.</p>            </div>
 
-            {trashFiles.length > 0 && (
+            {(trashFiles.length > 0 || trashFolders.length > 0) && (
                 <button
                 className="btn btn-danger"
                 onClick={handleEmptyTrash}
@@ -25,7 +27,7 @@ function TrashView({
                 </button>
             )}
          </div>
-      {trashFiles.length === 0 ? (
+      {trashFiles.length === 0 && trashFolders.length === 0 ? (
         <div className="folder-empty-state">
           <div className="folder-empty-icon">
             🗑️
@@ -40,58 +42,91 @@ function TrashView({
       ) : (
         <div className="files-table">
 
-          <div className="file-row file-header">
-            <span>Name</span>
-            <span>Size</span>
-            <span>Original Folder</span>
-            <span>Deleted</span>
-            <span></span>
-          </div>
+  <div className="file-row file-header">
+    <span>Name</span>
+    <span>Type</span>
+    <span>Original Location</span>
+    <span>Deleted</span>
+    <span></span>
+  </div>
 
-          {trashFiles.map((file) => (
-            <div
-              className="file-row"
-              key={file.id}
-            >
-              <div className="file-name">
-                <span className="file-icon">
-                  📄
-                </span>
+  {trashFiles.map((file) => (
+    <div
+      className="file-row"
+      key={`file-${file.id}`}
+    >
+      <div className="file-name">
+        <span className="file-icon">
+          📄
+        </span>
 
-                <span>{file.name}</span>
-              </div>
+        <span>{file.name}</span>
+      </div>
 
-              <span>{file.size}</span>
+      <span>File</span>
 
-              <span>
-                {folderList.find(
-                  (folder) =>
-                    folder.id === file.folderId
-                )?.name || "No folder"}
-              </span>
+      <span>
+        {folderList.find(
+          (folder) => folder.id === file.folderId
+        )?.name || "No folder"}
+      </span>
 
-              <span>{file.deletedAt}</span>
+      <span>{file.deletedAt}</span>
 
-              <div className="trash-actions">
+      <div className="trash-actions">
+        <button
+          onClick={() => handleRestoreFile(file)}
+        >
+          Restore
+        </button>
 
-                <button
-                    onClick={() => handleRestoreFile(file)}
-                >
-                    Restore
-                </button>
+        <button
+          className="permanent-delete-btn"
+          onClick={() => handlePermanentDelete(file)}
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  ))}
 
-                <button
-                    className="permanent-delete-btn"
-                    onClick={() => handlePermanentDelete(file)}
-                >
-                    Delete
-                </button>
+  {trashFolders.map((folder) => (
+    <div
+      className="file-row"
+      key={`folder-${folder.id}`}
+    >
+      <div className="file-name">
+        <span className="file-icon">
+          📁
+        </span>
 
-                </div>
-            </div>
-          ))}
+        <span>{folder.name}</span>
+      </div>
 
-        </div>
+      <span>Folder</span>
+
+      <span>My Files</span>
+
+      <span>{folder.deletedAt}</span>
+
+      <div className="trash-actions">
+        <button
+          onClick={() => handleRestoreFolder(folder)}
+        >
+          Restore
+        </button>
+
+        <button
+          className="permanent-delete-btn"
+          onClick={() => handlePermanentDeleteFolder(folder)}
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  ))}
+
+</div>
       )}
 
     </div>

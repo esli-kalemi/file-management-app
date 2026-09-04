@@ -1,0 +1,85 @@
+/* =========================
+   FOLDER GRID
+========================= */
+
+.folders-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+/* =========================
+   FOLDER CARD
+========================= */
+
+.folder-card {
+  position: relative;
+
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+
+  padding: 18px;
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  cursor: pointer;
+  z-index: 1;
+}
+
+.folder-card:has(.context-menu) {
+  z-index: 10;
+}
+
+.folder-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.06);
+}
+
+.folder-icon {
+  font-size: 30px;
+}
+
+.folder-card h3 {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.folder-card p {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* =========================
+   FOLDER FAVORITE
+========================= */
+
+.folder-favorite-button {
+  margin-left: auto;
+
+  border: none;
+  background: none;
+
+  color: #d1d5db;
+
+  font-size: 16px;
+  cursor: pointer;
+
+  padding: 2px;
+  line-height: 1;
+
+  transition: 0.2s ease;
+}
+
+.folder-favorite-button:hover {
+  color: #f59e0b;
+  transform: scale(1.1);
+}
+
+.folder-favorite-button.folder-favorite-active {
+  color: #f59e0b;
+}
