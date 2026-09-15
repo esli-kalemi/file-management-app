@@ -7,20 +7,56 @@ import TrashView from "./TrashView";
 import MyFilesView from "./MyFilesView";
 import FavoritesView from "./FavoritesView";
 
+import {
+    getFolders,
+    createFolder,
+    renameFolder
+} from "../api/folders";
+import { 
+  getFiles,
+  renameFile,
+  uploadFile,
+  getDownloadUrl
+ } from "../api/files";
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) {
+        return `${bytes} B`;
+    }
+
+    if (bytes < 1024 * 1024) {
+        return `${(bytes / 1024).toFixed(1)} KB`;
+    }
+
+    if (bytes < 1024 * 1024 * 1024) {
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+}
+
+function formatDate(dateString) {
+    return new Date(dateString).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+    });
+}
+
 function Dashboard({ currentSection, setCurrentSection, searchTerm }) {
 
     const [openMenu, setOpenMenu] = useState(null);
     const [menuDirection, setMenuDirection] = useState("down");
     const [showFolderModal, setShowFolderModal] = useState(false);
     const [folderName, setFolderName] = useState("");
-    const [folderList, setFolderList] = useState(folders);
+    const [folderList, setFolderList] = useState([]);
     const [showRenameModal, setShowRenameModal] = useState(false);
     const [folderToRename, setFolderToRename] = useState(null);
 
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [folderToDelete, setFolderToDelete] = useState(null);
     const [selectedFolder, setSelectedFolder] = useState(null);
-    const [fileList, setFileList] = useState(files);
+    const [fileList, setFileList] = useState([]);
 
     const [fileToRename, setFileToRename] = useState(null);
     const [showFileRenameModal, setShowFileRenameModal] = useState(false);
@@ -52,6 +88,42 @@ const filteredFavoriteFiles = favoriteFiles.filter((file) =>
 const filteredFavoriteFolders = favoriteFolders.filter((folder) =>
     folder.name.toLowerCase().includes(searchTerm.toLowerCase())
 );
+
+    useEffect(() => {
+      async function loadData() {
+          try {
+              const [foldersResponse, filesResponse] = await Promise.all([
+                  getFolders(),
+                  getFiles()
+              ]);
+
+              const backendFolders = foldersResponse.data.map((folder) => ({
+                  id: folder.id,
+                  name: folder.name,
+                  fileCount: 0,
+                  parentId: folder.parent_id
+              }));
+
+              const backendFiles = filesResponse.data.map((file) => ({
+                  id: file.id,
+                  name: file.original_name,
+                  type: file.mime_type,
+                  size: formatFileSize(file.size),
+                  modified: formatDate(file.updated_at),
+                  folderId: file.folder_id
+              }));
+
+              setFolderList(backendFolders);
+              setFileList(backendFiles);
+          } catch (error) {
+              console.error("Failed to load data:", error);
+              setFolderList(folders);
+              setFileList(files);
+          }
+      }
+
+      loadData();
+  }, []);
 
     useEffect(() => {
     function handleClickOutside() {
@@ -88,24 +160,31 @@ const filteredFavoriteFolders = favoriteFolders.filter((folder) =>
         );
     }
 
-    function handleCreateFolder() {
+    async function handleCreateFolder() {
         if (!folderName.trim()) {
             return;
         }
 
-        const newFolder = {
-            id: Date.now(),
-            name: folderName.trim(),
-            fileCount: 0
-        };
+        try {
+            const response = await createFolder(folderName.trim());
 
-        setFolderList((currentFolders) => [
-            ...currentFolders,
-            newFolder
-        ]);
+            const newFolder = {
+                id: response.data.id,
+                name: response.data.name,
+                fileCount: 0,
+                parentId: response.data.parent_id
+            };
 
-        setFolderName("");
-        setShowFolderModal(false);
+            setFolderList((currentFolders) => [
+                ...currentFolders,
+                newFolder
+            ]);
+
+            setFolderName("");
+            setShowFolderModal(false);
+        } catch (error) {
+            console.error("Failed to create folder:", error.message);
+        }
     }
 
     function handleRenameClick(folder) {
@@ -113,24 +192,41 @@ const filteredFavoriteFolders = favoriteFolders.filter((folder) =>
         setFolderName(folder.name);
         setShowRenameModal(true);
         setOpenMenu(null);
-    }
+      }
 
-    function handleRenameFolder() {
+      async function handleRenameFolder() {
         if (!folderName.trim() || !folderToRename) {
             return;
         }
 
-        setFolderList((currentFolders) =>
-            currentFolders.map((folder) =>
-            folder.id === folderToRename.id
-                ? { ...folder, name: folderName.trim() }
-                : folder
-            )
-        );
+        try {
+            const response = await renameFolder(
+                folderToRename.id,
+                folderName.trim()
+            );
 
-        setFolderName("");
-        setFolderToRename(null);
-        setShowRenameModal(false);
+            const updatedFolder = response.data;
+
+            setFolderList((currentFolders) =>
+                currentFolders.map((folder) =>
+                    folder.id === folderToRename.id
+                        ? {
+                            ...folder,
+                            name: updatedFolder.name
+                        }
+                        : folder
+                )
+            );
+
+            setFolderName("");
+            setFolderToRename(null);
+            setShowRenameModal(false);
+        } catch (error) {
+            console.error(
+                "Failed to rename folder:",
+                error.message
+            );
+        }
     }
 
     function handleDeleteClick(folder) {
@@ -175,7 +271,9 @@ const filteredFavoriteFolders = favoriteFolders.filter((folder) =>
     : [];
 
     function handleOpenFile(file) {
-        console.log("Opening file:", file.name);
+      const downloadUrl = getDownloadUrl(file.id);
+
+      window.open(downloadUrl, "_blank");
     }
 
     function handleFileRenameClick(file) {
@@ -185,23 +283,40 @@ const filteredFavoriteFolders = favoriteFolders.filter((folder) =>
         setOpenMenu(null);
     }
 
-    function handleRenameFile() {
-        if (!folderName.trim() || !fileToRename) {
-            return;
-        }
+    async function handleRenameFile() {
+      if (!folderName.trim() || !fileToRename) {
+          return;
+      }
 
-        setFileList((currentFiles) =>
-            currentFiles.map((file) =>
-            file.id === fileToRename.id
-                ? { ...file, name: folderName.trim() }
-                : file
-            )
-        );
+      try {
+          const response = await renameFile(
+              fileToRename.id,
+              folderName.trim()
+          );
 
-        setFolderName("");
-        setFileToRename(null);
-        setShowFileRenameModal(false);
-    }
+          const updatedFile = response.data;
+
+          setFileList((currentFiles) =>
+              currentFiles.map((file) =>
+                  file.id === fileToRename.id
+                      ? {
+                          ...file,
+                          name: updatedFile.original_name
+                      }
+                      : file
+              )
+          );
+
+          setFolderName("");
+          setFileToRename(null);
+          setShowFileRenameModal(false);
+      } catch (error) {
+          console.error(
+              "Failed to rename file:",
+              error.message
+          );
+      }
+  }
 
     function handleFileDeleteClick(file) {
         setFileToDelete(file);
@@ -239,34 +354,48 @@ const filteredFavoriteFolders = favoriteFolders.filter((folder) =>
         document.getElementById("file-upload").click();
     }
 
-    function handleFileUpload(event) {
-        const selectedFile = event.target.files[0];
+  async function handleFileUpload(event) {
+      const selectedFile = event.target.files[0];
 
-        if (!selectedFile || !uploadFolder) {
-            return;
-        }
+      if (!selectedFile) {
+          return;
+      }
 
-        const newFile = {
-            id: Date.now(),
-            name: selectedFile.name,
-            type: selectedFile.type,
-            size: `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB`,
-            modified: new Date().toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric"
-            }),
-            folderId: uploadFolder ? uploadFolder.id : null
-        };
+      try {
+          const folderId = uploadFolder
+              ? uploadFolder.id
+              : null;
 
-        setFileList((currentFiles) => [
-            ...currentFiles,
-            newFile
-        ]);
+          const response = await uploadFile(
+              selectedFile,
+              folderId
+          );
 
-        setUploadFolder(null);
-        event.target.value = "";
-        }
+          const uploadedFile = response.data;
+
+          const newFile = {
+              id: uploadedFile.id,
+              name: uploadedFile.original_name,
+              type: uploadedFile.mime_type,
+              size: formatFileSize(uploadedFile.size),
+              modified: formatDate(uploadedFile.updated_at),
+              folderId: uploadedFile.folder_id
+          };
+
+          setFileList((currentFiles) => [
+              ...currentFiles,
+              newFile
+          ]);
+
+          setUploadFolder(null);
+          event.target.value = "";
+      } catch (error) {
+          console.error(
+              "Failed to upload file:",
+              error.message
+          );
+      }
+  }
     function handleRestoreFile(file) {
   setTrashFiles((currentTrash) =>
     currentTrash.filter(
